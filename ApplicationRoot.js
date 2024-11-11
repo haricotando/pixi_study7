@@ -27,7 +27,70 @@ export class ApplicationRoot extends PIXI.Container {
      * アセット読み込み等完了後スタート
     */
     init(){
-     }
+        this.requestDeviceOrientationPermission();
+    }
+
+    requestDeviceOrientationPermission(){
+        const button = this.addChild(new PIXI.Container());
+        const background = button.addChild(GraphicsHelper.exDrawRect(0, 0, 200, 200, false, {color:0xFF0000}));
+        const label = button.addChild(new PIXI.Text('> Request Permission ', {fontFamily:'Inter', fontSize: 60, fontWeight: 500, fill:0xFFFFFF}));
+        background.width = label.width;
+        background.height = label.height;
+        Utils.pivotCenter(button);
+        button.y = -200;
+
+        button.interactive = true;
+        button.buttonMode = true;
+        button.on("pointertap", () => {
+            if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+              // iOS 13以降でのアクセス許可リクエスト
+                DeviceOrientationEvent.requestPermission()
+                .then((response) => {
+                    if (response === "granted") {
+                        /**
+                         * @todo このbindでよかったんだろうか？
+                         */
+                        window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
+                        console.log('許可が付与されました');
+                    } else {
+                        console.log('許可が拒否されました');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Permission request error:", error);
+                    console.log('エラーが発生しました');
+                });
+            } else {
+                // AndroidやPCなど、許可リクエストが不要なブラウザの場合
+                window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
+                console.log('許可が不要です');
+            }
+            button.interactive = false;
+            this.removeChild(button);
+            initCOMA();
+        });
+
+        this.tfContainer = this.addChild(new PIXI.Container());
+        this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
+        this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 50;
+
+        this.tf1 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf2 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf2.y = 50;
+        this.tf3 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf3.y = 100;
+    }
+    
+    // デバイスの向きデータを取得する関数
+    handleOrientation(event) {
+        this.tf1.text = `alpha: ${Utils.roundTo(event.alpha, 1)}`;
+        this.tf2.text = `beta: ${Utils.roundTo(event.beta, 1)}`;
+        this.tf3.text = `gamma: ${Utils.roundTo(event.gamma, 1)}`;
+    }
+
+    initCOMA(){
+        
+    }
 
     /** ------------------------------------------------------------
         * アセットをまとめてロード
