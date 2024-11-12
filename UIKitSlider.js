@@ -29,11 +29,11 @@ export class UIKitSlider extends PIXI.Container {
          */
         app.stage.hitArea = app.screen;
 
-        const sliderBackground = new PIXI.Graphics().beginFill(0xD9D9D9).drawRoundedRect(0, 0, sliderWidth, baseSize / 2, baseSize / 2);
+        const sliderBackground = new PIXI.Graphics().lineStyle(2, 0xFFFFFF).beginFill(0xD9D9D9).drawRoundedRect(0, 0, sliderWidth, baseSize / 2, baseSize / 2);
         sliderBackground.y = baseSize / 4;
         this.addChild(sliderBackground);
 
-        const handle = new PIXI.Graphics().beginFill(0xffffff).drawCircle(0, 0, baseSize / 2 - offset * 2);
+        const handle = new PIXI.Graphics().lineStyle(4, 0x666666).beginFill(0xffffff).drawCircle(0, 0, baseSize / 2 - offset * 2);
         const halfHandleWidth = handle.width / 2;
         handle.x = defaultVal / valTo * (sliderWidth - handle.width) + halfHandleWidth;
         handle.y = baseSize / 2;
