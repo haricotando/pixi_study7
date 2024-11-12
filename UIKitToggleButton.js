@@ -21,12 +21,12 @@ export class UIKitToggleButton extends PIXI.Container {
         const black = new PIXI.Graphics().beginFill(0x000000).drawRoundedRect(0, 0, baseSize * 2, baseSize, baseSize / 2);
         this.addChild(black);
 
-        const background = new PIXI.Graphics().beginFill(0xD9D9D9).drawRoundedRect(0, 0, baseSize * 2, baseSize, baseSize / 2);
+        const background = new PIXI.Graphics().lineStyle(2, 0xFFFFFF).beginFill(0xD9D9D9).drawRoundedRect(0, 0, baseSize * 2, baseSize, baseSize / 2);
         this.addChild(background);
         background.cursor = 'pointer';
         background.eventMode = 'static';
 
-        const button = new PIXI.Graphics().beginFill(0xFFFFFF).drawCircle(0, 0, baseSize / 2 - offset * 2);
+        const button = new PIXI.Graphics().lineStyle(4, 0x666666).beginFill(0xFFFFFF).drawCircle(0, 0, baseSize / 2 - offset * 2);
         button.x = baseSize / 2;
         button.y = baseSize / 2;
         this.addChild(button);

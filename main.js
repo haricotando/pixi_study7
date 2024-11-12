@@ -78,38 +78,3 @@ function init(){
     });
     app.renderer.emit('resize');    
 }
-/*
-const button = document.getElementById('requestPermissionBtn');
-
-button.addEventListener('click', () => {
-  // DeviceOrientationEventをサポートしているか確認
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    // iOS 13+ の場合、許可リクエストを実行
-    DeviceOrientationEvent.requestPermission()
-      .then((response) => {
-        if (response === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-          console.log("Permission granted");
-        } else {
-          console.log("Permission denied");
-        }
-      })
-      .catch((error) => {
-        console.error("Permission request error:", error);
-      });
-  } else {
-    // 他のブラウザでは許可リクエストなしでイベントを追加
-    window.addEventListener('deviceorientation', handleOrientation, true);
-    console.log("Permission not required for this browser");
-  }
-});
-
-function handleOrientation(event) {
-  const beta = event.beta;
-  const gamma = event.gamma;
-  console.log("Beta (front-back tilt):", beta);
-  console.log("Gamma (left-right tilt):", gamma);
-  
-  // ここにPIXIオブジェクトの操作コードを追加
-}
-  */
