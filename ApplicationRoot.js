@@ -27,10 +27,53 @@ export class ApplicationRoot extends PIXI.Container {
      * アセット読み込み等完了後スタート
     */
     init(){
-        // this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
-        // Utils.pivotCenter(this.background);
+        this.sensorData = {
+            gyro:{
+                alpha: 0,
+                beta : 0,
+                gamma: 0,
+            },
+            acceleration:{
+                x: 0,
+                y: 0,
+                z: 0,
+            }
+        };
+
+        this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
+        Utils.pivotCenter(this.background);
         this.requestDeviceOrientationPermission();
-        // this.initCOMA();
+        this.initCOMA();
+        this.studyAround();
+        this.sortableChildren = true;
+    }
+
+    studyAround(){
+        let obj = {degree:0, radius:100};
+        const slider = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, obj, 'radius', 10, 300, 5));
+        slider.x = dp.limitedScreen.negativeHalfWidth + 25;
+        slider.y = dp.limitedScreen.negativeHalfHeight + 500;
+        this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}))
+
+        dp.app.ticker.add(() => {
+            this.tf1.text = `alpha: ${Utils.roundTo(this.sensorData.gyro.alpha, 1)}`;
+            this.tf2.text = `beta: ${Utils.roundTo(this.sensorData.gyro.beta, 1)}`;
+            this.tf3.text = `gamma: ${Utils.roundTo(this.sensorData.gyro.gamma, 1)}`;
+
+            this.tf4.text = `x: ${Utils.roundTo(this.sensorData.acceleration.x, 1)}`;
+            this.tf5.text = `y: ${Utils.roundTo(this.sensorData.acceleration.y, 1)}`;
+            this.tf6.text = `z: ${Utils.roundTo(this.sensorData.acceleration.z, 1)}`;
+
+            const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
+            const destX = obj.radius * Math.cos(radian);
+            const destY = obj.radius * Math.sin(radian);
+            this.pointer.x = destX;
+            this.pointer.y = destY;
+
+            this.dropShadowFilter.offset.x = 0 - this.sensorData.gyro.gamma;
+            this.dropShadowFilter.offset.y = this.sensorData.gyro.beta + 20
+            
+        });
     }
 
     requestDeviceOrientationPermission(){
@@ -53,7 +96,9 @@ export class ApplicationRoot extends PIXI.Container {
                         /**
                          * @todo このbindでよかったんだろうか？
                          */
-                        window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
+                        window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                        window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
+                        
                         console.log('許可が付与されました');
                     } else {
                         console.log('許可が拒否されました');
@@ -66,31 +111,57 @@ export class ApplicationRoot extends PIXI.Container {
             } else {
                 // AndroidやPCなど、許可リクエストが不要なブラウザの場合
                 window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
+                window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
                 console.log('許可が不要です');
             }
             button.interactive = false;
             this.removeChild(button);
+            this.pointer.zIndex = 100;
             this.initCOMA();
         });
 
         this.tfContainer = this.addChild(new PIXI.Container());
         this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
-        this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 50;
+        this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 100;
 
         this.tf1 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
         this.tf2 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
         this.tf2.y = 50;
         this.tf3 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
         this.tf3.y = 100;
+
+        this.tf4 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf4.y = 150;
+        this.tf5 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf5.y = 200;
+        this.tf6 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
+        this.tf6.y = 250;
     }
     
     // デバイスの向きデータを取得する関数
     handleOrientation(event) {
-        this.tf1.text = `alpha: ${Utils.roundTo(event.alpha, 1)}`;
-        this.tf2.text = `beta: ${Utils.roundTo(event.beta, 1)}`;
-        this.tf3.text = `gamma: ${Utils.roundTo(event.gamma, 1)}`;
-        this.dropShadowFilter.offset.x = 0 - event.gamma;
-        this.dropShadowFilter.offset.y = event.beta + 20
+        if(event.alpha == undefined){
+            return false;
+        }
+        this.sensorData.gyro = {
+            alpha: event.alpha,
+            beta : event.beta,
+            gamma: event.gamma,
+            
+        };
+        
+    }
+
+    handleMotion(event){
+        if(event.accelerationIncludingGravity.x == undefined){
+            return false;
+        }
+        this.sensorData.acceleration = {
+            x: event.accelerationIncludingGravity.x,
+            y: event.accelerationIncludingGravity.y,
+            z: event.accelerationIncludingGravity.z,
+
+        }
     }
 
     initCOMA(){
