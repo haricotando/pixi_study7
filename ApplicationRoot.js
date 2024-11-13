@@ -7,11 +7,8 @@ export class ApplicationRoot extends PIXI.Container {
     constructor(debug = false) {
         super();
 
-        /**
-            * この辺までテンプレ
-            * constructor -> アセット読み込み -> init
-         */
         this.sortableChildren = true;
+        this.shadowRadius = 0;
         this._debug = debug;
         this.loadAssets();
         
@@ -27,6 +24,8 @@ export class ApplicationRoot extends PIXI.Container {
      * アセット読み込み等完了後スタート
     */
     init(){
+        this.sortableChildren = true;
+
         this.sensorData = {
             gyro:{
                 alpha: 0,
@@ -42,83 +41,24 @@ export class ApplicationRoot extends PIXI.Container {
 
         this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
         Utils.pivotCenter(this.background);
+        const guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
+        guide.x = dp.limitedScreen.negativeHalfWidth;
+        guide.y = dp.limitedScreen.negativeHalfHeight + 150;
+        Utils.resizeImage(guide, dp.limitedScreen);
+        
         this.requestDeviceOrientationPermission();
-        this.initCOMA();
         this.studyAround();
-        this.sortableChildren = true;
+        this.initCOMA();
     }
 
+    /** ------------------------------------------------------------
+     * 
+     */
     studyAround(){
-        let obj = {degree:0, radius:100};
-        const slider = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, obj, 'radius', 10, 300, 5));
+        const slider = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this, 'shadowRadius', 10, 300, 5));
         slider.x = dp.limitedScreen.negativeHalfWidth + 25;
         slider.y = dp.limitedScreen.negativeHalfHeight + 500;
         this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}))
-
-        dp.app.ticker.add(() => {
-            this.tf1.text = `alpha: ${Utils.roundTo(this.sensorData.gyro.alpha, 1)}`;
-            this.tf2.text = `beta: ${Utils.roundTo(this.sensorData.gyro.beta, 1)}`;
-            this.tf3.text = `gamma: ${Utils.roundTo(this.sensorData.gyro.gamma, 1)}`;
-
-            this.tf4.text = `x: ${Utils.roundTo(this.sensorData.acceleration.x, 1)}`;
-            this.tf5.text = `y: ${Utils.roundTo(this.sensorData.acceleration.y, 1)}`;
-            this.tf6.text = `z: ${Utils.roundTo(this.sensorData.acceleration.z, 1)}`;
-
-            const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
-            const destX = obj.radius * Math.cos(radian);
-            const destY = obj.radius * Math.sin(radian);
-            this.pointer.x = destX;
-            this.pointer.y = destY;
-
-            this.dropShadowFilter.offset.x = 0 - this.sensorData.gyro.gamma;
-            this.dropShadowFilter.offset.y = this.sensorData.gyro.beta + 20
-            
-        });
-    }
-
-    requestDeviceOrientationPermission(){
-        const button = this.addChild(new PIXI.Container());
-        const background = button.addChild(GraphicsHelper.exDrawRect(0, 0, 200, 200, false, {color:0xFF0000}));
-        const label = button.addChild(new PIXI.Text('> Request Permission ', {fontFamily:'Inter', fontSize: 60, fontWeight: 500, fill:0xFFFFFF}));
-        background.width = label.width;
-        background.height = label.height;
-        Utils.pivotCenter(button);
-        button.y = -200;
-
-        button.interactive = true;
-        button.buttonMode = true;
-        button.on("pointertap", () => {
-            if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-              // iOS 13以降でのアクセス許可リクエスト
-                DeviceOrientationEvent.requestPermission()
-                .then((response) => {
-                    if (response === "granted") {
-                        /**
-                         * @todo このbindでよかったんだろうか？
-                         */
-                        window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
-                        window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
-                        
-                        console.log('許可が付与されました');
-                    } else {
-                        console.log('許可が拒否されました');
-                    }
-                })
-                .catch((error) => {
-                    console.error("Permission request error:", error);
-                    console.log('エラーが発生しました');
-                });
-            } else {
-                // AndroidやPCなど、許可リクエストが不要なブラウザの場合
-                window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
-                window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
-                console.log('許可が不要です');
-            }
-            button.interactive = false;
-            this.removeChild(button);
-            this.pointer.zIndex = 100;
-            this.initCOMA();
-        });
 
         this.tfContainer = this.addChild(new PIXI.Container());
         this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
@@ -136,32 +76,106 @@ export class ApplicationRoot extends PIXI.Container {
         this.tf5.y = 200;
         this.tf6 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
         this.tf6.y = 250;
+
+        dp.app.ticker.add(() => {
+            this.tf1.text = `alpha: ${Utils.roundTo(this.sensorData.gyro.alpha, 1)}`;
+            this.tf2.text = `beta: ${Utils.roundTo(this.sensorData.gyro.beta, 1)}`;
+            this.tf3.text = `gamma: ${Utils.roundTo(this.sensorData.gyro.gamma, 1)}`;
+
+            this.tf4.text = `x: ${Utils.roundTo(this.sensorData.acceleration.x, 1)}`;
+            this.tf5.text = `y: ${Utils.roundTo(this.sensorData.acceleration.y, 1)}`;
+            this.tf6.text = `z: ${Utils.roundTo(this.sensorData.acceleration.z, 1)}`;
+
+            const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
+            const destX = this.shadowRadius * Math.cos(radian);
+            const destY = this.shadowRadius * Math.sin(radian);
+            this.pointer.x = destX;
+            this.pointer.y = destY;
+
+            // this.dropShadowFilter.offset.x = 0 - this.sensorData.gyro.gamma;
+            // this.dropShadowFilter.offset.y = this.sensorData.gyro.beta + 20
+            
+        });
+    }
+
+    /** ------------------------------------------------------------
+     *  OSごとの加速度／ジャイロ取得分岐
+     */
+    requestDeviceOrientationPermission(){
+        const button = this.addChild(new PIXI.Container());
+        const background = button.addChild(GraphicsHelper.exDrawRect(0, 0, 200, 200, false, {color:0xFF0000}));
+        const label = button.addChild(new PIXI.Text('> Request Permission ', {fontFamily:'Inter', fontSize: 60, fontWeight: 500, fill:0xFFFFFF}));
+        background.width = label.width;
+        background.height = label.height;
+        Utils.pivotCenter(button);
+        button.y = -200;
+
+        button.interactive = true;
+        button.buttonMode = true;
+
+        button.on("pointertap", () => {
+            if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+              // iOS 13以降でのアクセス許可リクエスト
+                DeviceOrientationEvent.requestPermission()
+                .then((response) => {
+                    if (response === "granted") {
+                        /**
+                         * @todo このbindでよかったんだろうか？
+                         */
+                        window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                        window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
+                        this.requestGranted();
+                        console.log('許可が付与されました');
+                    } else {
+                        console.log('許可が拒否されました');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Permission request error:", error);
+                    console.log('エラーが発生しました');
+                });
+            } else {
+                // AndroidやPCなど、許可リクエストが不要なブラウザの場合
+                window.addEventListener("deviceorientation", this.handleOrientation.bind(this), true);
+                window.addEventListener('devicemotion', this.handleMotion.bind(this), true);
+                this.requestGranted();
+                console.log('許可が不要です');
+            }
+            button.interactive = false;
+            this.removeChild(button);
+        });
+    }
+
+    /** ------------------------------------------------------------
+     *  加速度／ジャイロの取得が許可された時
+     */
+    requestGranted(){
+        this.pointer.zIndex = 100;
+        this.initCOMA();
     }
     
-    // デバイスの向きデータを取得する関数
     handleOrientation(event) {
-        if(event.alpha == undefined){
-            return false;
-        }
+        if (event.alpha === undefined) return false;
         this.sensorData.gyro = {
             alpha: event.alpha,
             beta : event.beta,
             gamma: event.gamma,
-            
         };
         
     }
 
     handleMotion(event){
-        if(event.accelerationIncludingGravity.x == undefined){
-            return false;
-        }
+        if (event.alpha === undefined) return false;
         this.sensorData.acceleration = {
             x: event.accelerationIncludingGravity.x,
             y: event.accelerationIncludingGravity.y,
             z: event.accelerationIncludingGravity.z,
-
         }
+    }
+
+
+    redrawShadow(){
+        
     }
 
     initCOMA(){
@@ -291,12 +305,12 @@ export class ApplicationRoot extends PIXI.Container {
         * 公式の画像でテスト読み込み
      */
     loadAssets(){
-        PIXI.Assets.add('flowerTop', 'https://pixijs.com/assets/flowerTop.png');
-        PIXI.Assets.add('eggHead', 'https://pixijs.com/assets/eggHead.png');
+        PIXI.Assets.add('guide', './assets/guide1.jpeg');
+        // PIXI.Assets.add('flowerTop', 'https://pixijs.com/assets/flowerTop.png');
+        // PIXI.Assets.add('eggHead', 'https://pixijs.com/assets/eggHead.png');
 
         const assetsPromise = PIXI.Assets.load([
-            'flowerTop',
-            'eggHead',
+            'guide',
         ]);
         
         assetsPromise.then((items) => {
