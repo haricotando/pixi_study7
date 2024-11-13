@@ -28,10 +28,10 @@ export class PseudoApplicationRoot extends PIXI.Container {
 
         this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
         Utils.pivotCenter(this.background);
-        this.guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
-        this.guide.x = dp.limitedScreen.negativeHalfWidth;
-        this.guide.y = dp.limitedScreen.negativeHalfHeight + 150;
-        Utils.resizeImage(this.guide, dp.limitedScreen);
+        // this.guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
+        // this.guide.x = dp.limitedScreen.negativeHalfWidth;
+        // this.guide.y = dp.limitedScreen.negativeHalfHeight + 150;
+        // Utils.resizeImage(this.guide, dp.limitedScreen);
         
         // this.requestDeviceOrientationPermission();
         // this.initCOMA();
@@ -43,12 +43,8 @@ export class PseudoApplicationRoot extends PIXI.Container {
         this.renderData = {
             shadowRadius: 60,
             shadowDegree: 125,
-            lightRadius : 0,
-            lightDegree : 0,
             cameraAngle : 90,
             cameraFOV   : 15,
-            
-            
         };
 
         /**
@@ -138,12 +134,6 @@ export class PseudoApplicationRoot extends PIXI.Container {
                 this.renderData.shadowRadius, this.renderData.shadowDegree,
 
             );
-
-
-
-            // this.dropShadowFilter.offset.x = 0 - this.sensorData.gyro.gamma;
-            // this.dropShadowFilter.offset.y = this.sensorData.gyro.beta + 20
-            
         });
     }
 
@@ -221,65 +211,6 @@ export class PseudoApplicationRoot extends PIXI.Container {
             z: event.accelerationIncludingGravity.z,
         }
     }
-
-    initCOMA(){
-        let text = 'COMA';
-            this.pseudoContainer = this.addChild(new PIXI.Container());
-            this.shadows   = this.pseudoContainer.addChild(new PIXI.Container());
-            
-            /**
-             * フロントフェイスText
-            */
-            const textStyle = new PIXI.TextStyle({
-                fontFamily: 'Inter',
-                fontSize  : 300,
-                fontWeight: 800,
-                fill      : [0xFF0000, 0xEFFF00],
-                // fill      : [0xFFFFFF, 0xEFEFEF],
-            //    fill             : [0xEFEFEF, 0xE7E0E0],
-            //    fill             : [0xE7E0E0, 0xD3CDCD],
-                align            : 'center',
-                fillGradientType : 0,
-                fillGradientStops: [0.3, 0.9, 1],
-            });
-            
-            const glowStyle = Utils.cloneTextStyle(textStyle, {fill: 0xFFFFFF});
-            const glowText = this.pseudoContainer.addChild(new PIXI.Text(text, glowStyle));
-            
-            const dropshadowStyle = Utils.cloneTextStyle(textStyle,  {fill: 0xFFFFFF});
-            const dropshadowText = this.pseudoContainer.addChild(new PIXI.Text(text, dropshadowStyle));
-            
-            this.sideFace = this.pseudoContainer.addChild(new PIXI.Container());
-            const mainText = new PIXI.Text(text, textStyle);
-            this.pseudoContainer.addChild(mainText);
-            Utils.pivotCenter(this.pseudoContainer);
-    
-    
-            /**
-             * サイドフェイス
-             */
-            const layers = 10;
-            const sideDepth = 1.5;
-            let sideStyle = Utils.cloneTextStyle(textStyle, {fill: 0x888888});
-            // let sideStyle = Utils.cloneTextStyle(textStyle, {fill: 0xD4D0C8});
-            let lastSide = undefined;
-            // サイドフェイス幅に合わせて中心寄せ
-            for (let i = 0; i < layers; i++) {
-                const side = this.sideFace.addChild(new PIXI.Text(text, sideStyle));
-                side.y = i * sideDepth;
-                if(lastSide){
-                    side.width -= sideDepth * (i / 1);
-                    side.x = i * (lastSide.width - side.width) / 2 * sideDepth;
-                }
-                lastSide = side;
-            }
-            this.sideFace.alpha = 0.4;
-    }
-
-
-
-
-
 
 
 

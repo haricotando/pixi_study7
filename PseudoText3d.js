@@ -29,8 +29,8 @@ export class PseudoText3d extends PIXI.Container {
         /**
          * フロントフェイスを作成
         */
-        const frontFace = new PIXI.Text(text, textStyle);
-        this.addChild(frontFace);
+        this.frontFace = new PIXI.Text(text, textStyle);
+        this.addChild(this.frontFace);
 
         /**
         * サイドフェイスを作成
@@ -93,7 +93,7 @@ export class PseudoText3d extends PIXI.Container {
         this.glowText.filters = [this.glowFilter];
 
         this.sideFace.zIndex = 10;
-        frontFace.zIndex = 20;
+        this.frontFace.zIndex = 20;
         this.glowText.zIndex = 21;
         
         Utils.pivotCenter(this);
