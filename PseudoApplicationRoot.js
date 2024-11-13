@@ -1,14 +1,13 @@
 import { dataProvider, dp } from "./dataProvider.js";
 import GraphicsHelper from "./helper/GraphicsHelper.js";
+import { PseudoText3d } from "./PseudoText3d.js";
 import Utils from "./Utils.js";
 
-export class ApplicationRoot extends PIXI.Container {
+export class PseudoApplicationRoot extends PIXI.Container {
     
     constructor(debug = false) {
         super();
 
-        this.sortableChildren = true;
-        this.shadowRadius = 0;
         this._debug = debug;
         this.loadAssets();
         
@@ -19,13 +18,42 @@ export class ApplicationRoot extends PIXI.Container {
             this.initSPFrame();
         }
     }
-
+    
     /** ------------------------------------------------------------
      * アセット読み込み等完了後スタート
     */
-    init(){
+   init(){
         this.sortableChildren = true;
 
+
+        this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
+        Utils.pivotCenter(this.background);
+        this.guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
+        this.guide.x = dp.limitedScreen.negativeHalfWidth;
+        this.guide.y = dp.limitedScreen.negativeHalfHeight + 150;
+        Utils.resizeImage(this.guide, dp.limitedScreen);
+        
+        // this.requestDeviceOrientationPermission();
+        // this.initCOMA();
+        this.initPseudoText();
+        this.studyAround();
+    }
+
+    initPseudoText(){
+        this.renderData = {
+            shadowRadius: 0,
+            shadowDegree: 0,
+            lightRadius : 0,
+            lightDegree : 0,
+            cameraAngle : 90,
+            cameraFOV   : 15,
+            
+            
+        };
+
+        /**
+         * @todo ここはdataProviderとかに連れて行く
+         */
         this.sensorData = {
             gyro:{
                 alpha: 0,
@@ -39,26 +67,27 @@ export class ApplicationRoot extends PIXI.Container {
             }
         };
 
-        this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
-        Utils.pivotCenter(this.background);
-        const guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
-        guide.x = dp.limitedScreen.negativeHalfWidth;
-        guide.y = dp.limitedScreen.negativeHalfHeight + 150;
-        Utils.resizeImage(guide, dp.limitedScreen);
-        
-        this.requestDeviceOrientationPermission();
-        this.studyAround();
-        this.initCOMA();
+        this.pseudo = this.addChild(new PseudoText3d('COMA'));
+        this.pseudo.y = 260;
     }
-
     /** ------------------------------------------------------------
      * 
      */
     studyAround(){
-        const slider = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this, 'shadowRadius', 10, 300, 5));
-        slider.x = dp.limitedScreen.negativeHalfWidth + 25;
-        slider.y = dp.limitedScreen.negativeHalfHeight + 500;
-        this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}))
+        const sliderRadius = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraAngle', 0, 360, 90, 'cameraAngle'));
+        sliderRadius.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderRadius.y = dp.limitedScreen.negativeHalfHeight + 500;
+
+        const sliderDegree = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraFOV', 0, 50, 15, 'cameraFOV'));
+        sliderDegree.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderDegree.y = dp.limitedScreen.negativeHalfHeight + 600;
+
+        const toggle = this.addChild(Utils.addUIToggleButton(dp.app, this.pseudo, 'visible', true));
+        toggle.x = -150;
+        const toggle2 = this.addChild(Utils.addUIToggleButton(dp.app, this.guide, 'visible', true));
+
+
+        this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}));
 
         this.tfContainer = this.addChild(new PIXI.Container());
         this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
@@ -86,11 +115,16 @@ export class ApplicationRoot extends PIXI.Container {
             this.tf5.text = `y: ${Utils.roundTo(this.sensorData.acceleration.y, 1)}`;
             this.tf6.text = `z: ${Utils.roundTo(this.sensorData.acceleration.z, 1)}`;
 
-            const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
-            const destX = this.shadowRadius * Math.cos(radian);
-            const destY = this.shadowRadius * Math.sin(radian);
+            // const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
+            const radian = Utils.degreesToRadians(this.renderData.cameraAngle);
+            const destX = this.renderData.cameraFOV * Math.cos(radian);
+            const destY = this.renderData.cameraFOV * Math.sin(radian);
+            
             this.pointer.x = destX;
             this.pointer.y = destY;
+            this.pseudo.redraw(this.renderData.cameraFOV, this.renderData.cameraAngle)
+
+
 
             // this.dropShadowFilter.offset.x = 0 - this.sensorData.gyro.gamma;
             // this.dropShadowFilter.offset.y = this.sensorData.gyro.beta + 20
@@ -173,15 +207,10 @@ export class ApplicationRoot extends PIXI.Container {
         }
     }
 
-
-    redrawShadow(){
-        
-    }
-
     initCOMA(){
         let text = 'COMA';
-            this.container = this.addChild(new PIXI.Container());
-            this.shadows   = this.container.addChild(new PIXI.Container());
+            this.pseudoContainer = this.addChild(new PIXI.Container());
+            this.shadows   = this.pseudoContainer.addChild(new PIXI.Container());
             
             /**
              * フロントフェイスText
@@ -190,7 +219,8 @@ export class ApplicationRoot extends PIXI.Container {
                 fontFamily: 'Inter',
                 fontSize  : 300,
                 fontWeight: 800,
-                fill      : [0xFFFFFF, 0xEFEFEF],
+                fill      : [0xFF0000, 0xEFFF00],
+                // fill      : [0xFFFFFF, 0xEFEFEF],
             //    fill             : [0xEFEFEF, 0xE7E0E0],
             //    fill             : [0xE7E0E0, 0xD3CDCD],
                 align            : 'center',
@@ -199,15 +229,15 @@ export class ApplicationRoot extends PIXI.Container {
             });
             
             const glowStyle = Utils.cloneTextStyle(textStyle, {fill: 0xFFFFFF});
-            const glowText = this.container.addChild(new PIXI.Text(text, glowStyle));
+            const glowText = this.pseudoContainer.addChild(new PIXI.Text(text, glowStyle));
             
             const dropshadowStyle = Utils.cloneTextStyle(textStyle,  {fill: 0xFFFFFF});
-            const dropshadowText = this.container.addChild(new PIXI.Text(text, dropshadowStyle));
+            const dropshadowText = this.pseudoContainer.addChild(new PIXI.Text(text, dropshadowStyle));
             
-            this.sideFace = this.container.addChild(new PIXI.Container());
+            this.sideFace = this.pseudoContainer.addChild(new PIXI.Container());
             const mainText = new PIXI.Text(text, textStyle);
-            this.container.addChild(mainText);
-            Utils.pivotCenter(this.container);
+            this.pseudoContainer.addChild(mainText);
+            Utils.pivotCenter(this.pseudoContainer);
     
     
             /**
@@ -229,67 +259,6 @@ export class ApplicationRoot extends PIXI.Container {
                 lastSide = side;
             }
             this.sideFace.alpha = 0.4;
-    
-            /**
-             * シャドウText
-            const shadowTextStyle = Utils.cloneTextStyle(textStyle);
-            const shadowDepth = 30;
-            
-            for (let i = 0; i < shadowDepth; i++) {
-                const shadowText = new PIXI.Text(text, shadowTextStyle);
-                shadowText.x = mainText.x - i * 1.5;
-                shadowText.y = mainText.y + i * 1.5;
-                shadowText.tint = 0x888888; // 暗めの影
-                shadowText.alpha = ((shadowDepth - i) / shadowDepth) * 0.2;
-                this.shadows.addChild(shadowText);
-            }
-            
-            for (let i = 0; i < shadowDepth; i++) {
-                const shadowText = new PIXI.Text(text, shadowTextStyle);
-                shadowText.x = mainText.x - i * 1.5;
-                shadowText.y = mainText.y + i * 1.5 - 10;
-                shadowText.tint = 0x888888; // 暗めの影
-                shadowText.alpha = ((shadowDepth - i) / shadowDepth) * 0.2;
-                this.shadows.addChild(shadowText);
-            }
-            
-            this.shadows.y = 10;
-            */
-
-            /**
-             * 
-            this.dropShadowFilter = new PIXI.filters.DropShadowFilter({
-                color     : 0x000000,
-                alpha     : 0.5,
-                blur      : 4,
-                quality   : 4,
-                offset    : {x:-4, y:8},
-                shadowOnly: true,
-            });
-            
-            dropshadowText.filters = [this.dropShadowFilter];
-            
-            this.glowFilter = new PIXI.filters.DropShadowFilter({
-                color  : 0xFFFFFF,
-                alpha  : 0.9,
-                blur   : 4,
-                quality: 4,
-                offset : {x:4, y:-8},
-                quality: 4,
-                shadowOnly: true,
-            });
-            glowText.filters = [this.glowFilter];
-            
-            */
-            /**
-             * @todo スマホだとoffsetが小さい点が気になる
-             */
-            if(Utils.isMobileDevice()){
-                // this.dropShadowFilter.offset.x *= 2;
-                // this.dropShadowFilter.offset.y *= 2;
-                // this.glowFilter.offset.x *= 2;
-                // this.glowFilter.offset.y *= 2;
-            }
     }
 
 

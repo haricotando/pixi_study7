@@ -3,6 +3,7 @@ import { dataProvider, dp } from "./dataProvider.js";
 
 import { ApplicationRoot } from "./ApplicationRoot.js";
 import { UIKitToggleButton } from "./UIKitToggleButton.js";
+import { PseudoApplicationRoot } from "./PseudoApplicationRoot.js";
 
 console.log(PIXI.VERSION)
 /* ------------------------------------------------------------
@@ -61,7 +62,7 @@ function init(){
     };
 
     document.body.appendChild(app.view);
-    let appRoot = app.stage.addChild(new ApplicationRoot(true));
+    let appRoot = app.stage.addChild(new PseudoApplicationRoot(true));
 /* ------------------------------------------------------------
     resize Event
 ------------------------------------------------------------ */
