@@ -41,8 +41,8 @@ export class PseudoApplicationRoot extends PIXI.Container {
 
     initPseudoText(){
         this.renderData = {
-            shadowRadius: 0,
-            shadowDegree: 0,
+            shadowRadius: 60,
+            shadowDegree: 125,
             lightRadius : 0,
             lightDegree : 0,
             cameraAngle : 90,
@@ -68,23 +68,33 @@ export class PseudoApplicationRoot extends PIXI.Container {
         };
 
         this.pseudo = this.addChild(new PseudoText3d('COMA'));
-        this.pseudo.y = 260;
+        this.pseudo.y = -50;
+        // this.pseudo.y = 260;
     }
     /** ------------------------------------------------------------
      * 
      */
     studyAround(){
-        const sliderRadius = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraAngle', 0, 360, 90, 'cameraAngle'));
-        sliderRadius.x = dp.limitedScreen.negativeHalfWidth + 25;
-        sliderRadius.y = dp.limitedScreen.negativeHalfHeight + 500;
+        const sliderCameraAngle = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraAngle', 0, 360, this.renderData.cameraAngle, 'cameraAngle'));
+        sliderCameraAngle.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderCameraAngle.y = dp.limitedScreen.negativeHalfHeight + 200;
 
-        const sliderDegree = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraFOV', 0, 50, 15, 'cameraFOV'));
-        sliderDegree.x = dp.limitedScreen.negativeHalfWidth + 25;
-        sliderDegree.y = dp.limitedScreen.negativeHalfHeight + 600;
+        const sliderCameraFOV = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'cameraFOV', 0, 50, this.renderData.cameraFOV, 'cameraFOV'));
+        sliderCameraFOV.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderCameraFOV.y = dp.limitedScreen.negativeHalfHeight + 300;
+
+        const sliderShadowRadius = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'shadowRadius', 0, 100, this.renderData.shadowRadius, 'shadowRadius'));
+        sliderShadowRadius.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderShadowRadius.y = dp.limitedScreen.negativeHalfHeight + 400;
+
+        const sliderShadowDegree = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'shadowDegree', 0, 360, this.renderData.shadowDegree, 'shadowDegree'));
+        sliderShadowDegree.x = dp.limitedScreen.negativeHalfWidth + 25;
+        sliderShadowDegree.y = dp.limitedScreen.negativeHalfHeight + 500;
 
         const toggle = this.addChild(Utils.addUIToggleButton(dp.app, this.pseudo, 'visible', true));
         toggle.x = -150;
         const toggle2 = this.addChild(Utils.addUIToggleButton(dp.app, this.guide, 'visible', true));
+        toggle.y = toggle2.y = 500;
 
 
         this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}));
@@ -93,18 +103,19 @@ export class PseudoApplicationRoot extends PIXI.Container {
         this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
         this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 100;
 
-        this.tf1 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf2 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf2.y = 50;
-        this.tf3 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf3.y = 100;
-
-        this.tf4 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf4.y = 150;
-        this.tf5 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf5.y = 200;
-        this.tf6 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:40}));
-        this.tf6.y = 250;
+        this.tf1 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf2 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf2.x = 300;
+        this.tf3 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf3.x = 600;
+        this.tf4 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf4.y = 50;
+        this.tf5 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf5.x = 300;
+        this.tf5.y = 50;
+        this.tf6 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf6.x = 600;
+        this.tf6.y = 50;
 
         dp.app.ticker.add(() => {
             this.tf1.text = `alpha: ${Utils.roundTo(this.sensorData.gyro.alpha, 1)}`;
@@ -122,7 +133,11 @@ export class PseudoApplicationRoot extends PIXI.Container {
             
             this.pointer.x = destX;
             this.pointer.y = destY;
-            this.pseudo.redraw(this.renderData.cameraFOV, this.renderData.cameraAngle)
+            this.pseudo.redraw(
+                this.renderData.cameraFOV, this.renderData.cameraAngle,
+                this.renderData.shadowRadius, this.renderData.shadowDegree,
+
+            );
 
 
 
