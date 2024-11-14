@@ -28,13 +28,7 @@ export class PseudoApplicationRoot extends PIXI.Container {
 
         this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
         Utils.pivotCenter(this.background);
-        // this.guide = this.addChild(new PIXI.Sprite(dp.assets.guide));
-        // this.guide.x = dp.limitedScreen.negativeHalfWidth;
-        // this.guide.y = dp.limitedScreen.negativeHalfHeight + 150;
-        // Utils.resizeImage(this.guide, dp.limitedScreen);
-        
-        // this.requestDeviceOrientationPermission();
-        // this.initCOMA();
+        this.requestDeviceOrientationPermission();
         this.initPseudoText();
         this.studyAround();
     }
@@ -63,7 +57,7 @@ export class PseudoApplicationRoot extends PIXI.Container {
             }
         };
 
-        this.pseudo = this.addChild(new PseudoText3d('COMA'));
+        this.pseudo = this.addChild(new PseudoText3d('AAAA'));
         this.pseudo.y = -50;
         // this.pseudo.y = 260;
     }
@@ -86,12 +80,6 @@ export class PseudoApplicationRoot extends PIXI.Container {
         const sliderShadowDegree = this.addChild(Utils.addUISlider(dp.app, dp.limitedScreen.width - 50, this.renderData, 'shadowDegree', 0, 360, this.renderData.shadowDegree, 'shadowDegree'));
         sliderShadowDegree.x = dp.limitedScreen.negativeHalfWidth + 25;
         sliderShadowDegree.y = dp.limitedScreen.negativeHalfHeight + 500;
-
-        const toggle = this.addChild(Utils.addUIToggleButton(dp.app, this.pseudo, 'visible', true));
-        toggle.x = -150;
-        const toggle2 = this.addChild(Utils.addUIToggleButton(dp.app, this.guide, 'visible', true));
-        toggle.y = toggle2.y = 500;
-
 
         this.pointer = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 20, false, {color:0x00FF00}));
 
@@ -127,12 +115,13 @@ export class PseudoApplicationRoot extends PIXI.Container {
             const destX = this.renderData.cameraFOV * Math.cos(radian);
             const destY = this.renderData.cameraFOV * Math.sin(radian);
             
+            // this.renderData.shadowDegree = this.sensorData.gyro.alpha + 90;
+
             this.pointer.x = destX;
             this.pointer.y = destY;
             this.pseudo.redraw(
                 this.renderData.cameraFOV, this.renderData.cameraAngle,
                 this.renderData.shadowRadius, this.renderData.shadowDegree,
-
             );
         });
     }
@@ -204,7 +193,7 @@ export class PseudoApplicationRoot extends PIXI.Container {
     }
 
     handleMotion(event){
-        if (event.alpha === undefined) return false;
+        if (event.accelerationIncludingGravity.x === undefined) return false;
         this.sensorData.acceleration = {
             x: event.accelerationIncludingGravity.x,
             y: event.accelerationIncludingGravity.y,
