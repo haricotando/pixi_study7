@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>傾きに応じたボールの動き</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 5%;
+    }
+    .circle-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      border: 5px solid black;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    .dot {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: red;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s linear;
+    }
+    .output {
+      font-size: 1em;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>端末の傾きに応じたボールの動き</h1>
+  <div class="circle-container">
+    <div class="dot"></div>
+  </div>
+  <div class="output">センサーを待っています...</div>
+
+  <script>
+    if (window.DeviceOrientationEvent) {
+      const dotElement = document.querySelector('.dot');
+      const outputElement = document.querySelector('.output');
+      const maxRadius = 1030; // ボールが動ける最大半径 (円の半径 - ボールの半径)
+
+      let currentX = 0;
+      let currentY = 0;
+      const smoothing = 0.2; // 慣性の強さ (値が小さいほどスムーズ)
+
+      window.addEventListener('deviceorientation', (event) => {
+        const { beta, gamma } = event;
+
+        // 傾きに基づいて目標位置を計算
+        const targetX = (gamma / 90) * maxRadius; // -90°〜90° → -maxRadius〜maxRadius
+        const targetY = (beta / 90) * maxRadius;  // -90°〜90° → -maxRadius〜maxRadius
+
+        // 慣性を加えてボールを移動
+        currentX += (targetX - currentX) * smoothing;
+        currentY += (targetY - currentY) * smoothing;
+
+        // 点の位置を更新
+        dotElement.style.transform = `translate(${currentX}px, ${currentY}px)`;
+
+        // デバッグ情報を表示
+        outputElement.textContent = `
+          beta (前後): ${beta.toFixed(2)}°, 
+          gamma (左右): ${gamma.toFixed(2)}°,
+          dotX: ${currentX.toFixed(2)}, dotY: ${currentY.toFixed(2)}
+        `;
+      });
+    } else {
+      document.querySelector('.output').textContent = 'この端末はジャイロセンサーをサポートしていません。';
+    }
+  </script>
+</body>
+</html>
