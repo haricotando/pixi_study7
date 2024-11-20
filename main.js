@@ -4,6 +4,7 @@ import { dataProvider, dp } from "./dataProvider.js";
 import { ApplicationRoot } from "./ApplicationRoot.js";
 import { UIKitToggleButton } from "./UIKitToggleButton.js";
 import { PseudoApplicationRoot } from "./PseudoApplicationRoot.js";
+import { GyroApplicationRoot } from "./GyroApplicationRoot.js";
 
 console.log(PIXI.VERSION)
 /* ------------------------------------------------------------
@@ -62,7 +63,9 @@ function init(){
     };
 
     document.body.appendChild(app.view);
-    let appRoot = app.stage.addChild(new PseudoApplicationRoot(true));
+    // let appRoot = app.stage.addChild(new GyroApplicationRoot());
+    // let appRoot = app.stage.addChild(new PseudoApplicationRoot(true));
+    const appRoot = app.stage.addChild(new ApplicationRoot());
 /* ------------------------------------------------------------
     resize Event
 ------------------------------------------------------------ */
