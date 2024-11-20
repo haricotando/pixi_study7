@@ -25,13 +25,29 @@ export class GyroApplicationRoot extends PIXI.Container {
     */
    init(){
         this.sortableChildren = true;
-
-
+        this.scene = {
+            /*
+                コード側から決める値
+            */
+            lightFrom: 90,      // 光の入射角 - Glow
+            lightStrength: 0,   // 光の強さ - Glow, 影の強さ - Shadow / Dropshadow
+            
+            /*
+            センサーから取得
+            */
+            shadowRadius: 0,    // 影の距離 - Shadow / Dropshadow
+            shadowDegree: 0,    // 影が伸びる角度（lightFromの反転値）- Shadow / Dropshadow
+            cameraFrom: 0,      // 側面見える角度 - Sideface
+            cameraFOV:  0,      // 側面の擬似画角 - Sideface
+            cameraTilt: 0,      // 傾け具合（どのくらい側面が見えるか） - Sideface
+            
+        }
+        // this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xE6E1DE}))
         this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
         Utils.pivotCenter(this.background);
         this.requestDeviceOrientationPermission();
         this.initPseudoText();
-        this.studyAround();
+        this.studyAround();        
     }
 
     initPseudoText(){
@@ -58,7 +74,7 @@ export class GyroApplicationRoot extends PIXI.Container {
             }
         };
 
-        this.pseudo = this.addChild(new GyroPseudoText3d('AAAA'));
+        this.pseudo = this.addChild(new GyroPseudoText3d('12:00'));
         this.pseudo.y = -50;
         // this.pseudo.y = 260;
     }
@@ -67,8 +83,8 @@ export class GyroApplicationRoot extends PIXI.Container {
      */
     studyAround(){
         this.tfContainer = this.addChild(new PIXI.Container());
-        this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 20;
-        this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 100;
+        this.tfContainer.x = dp.limitedScreen.negativeHalfWidth + 50;
+        this.tfContainer.y = dp.limitedScreen.negativeHalfHeight + 50;
 
         this.tf1 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
         this.tf2 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
@@ -85,6 +101,16 @@ export class GyroApplicationRoot extends PIXI.Container {
         this.tf6.y = 50;
 
         this.ball = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 100, 0, true));
+        this.tf7 = this.tfContainer.addChild(new PIXI.Text('00000', {fontSize:30}));
+        this.tf7.x = 0;
+        this.tf7.y = 1300;
+
+        this.circle = this.addChild(GraphicsHelper.exDrawCircle(0, 0, 450, {width:10}));
+        this.circle.beginFill(0xFF0000);
+        this.circle.drawRect(-50, -420, 100, 100);
+        this.circle.endFill();
+
+        this.tickCount = 0;
 
         dp.app.ticker.add(() => {
             this.tf1.text = `alpha: ${Utils.roundTo(this.sensorData.gyro.alpha, 1)}`;
@@ -94,6 +120,10 @@ export class GyroApplicationRoot extends PIXI.Container {
             this.tf4.text = `x: ${Utils.roundTo(this.sensorData.acceleration.x, 1)}`;
             this.tf5.text = `y: ${Utils.roundTo(this.sensorData.acceleration.y, 1)}`;
             this.tf6.text = `z: ${Utils.roundTo(this.sensorData.acceleration.z, 1)}`;
+
+            this.circle.rotation = Utils.degreesToRadians(this.sensorData.gyro.alpha);
+            this.tickCount ++;
+
 
             // const radian = Utils.degreesToRadians(this.sensorData.gyro.alpha);
             // const radian = Utils.degreesToRadians(this.renderData.cameraAngle);
@@ -105,21 +135,34 @@ export class GyroApplicationRoot extends PIXI.Container {
 
 
             if(this.granted){
-                const scaleFactor = 5;
+                const scaleFactor = 100;
 
                 let beta = Math.max(-90, Math.min(90, this.sensorData.gyro.beta)) * scaleFactor;
                 let gamma = Math.max(-90, Math.min(90, this.sensorData.gyro.gamma)) * scaleFactor;
                 
-                const x = (gamma / 90) * 200; // 左右の傾き → 水平方向
-                const y = (beta / 90) * 500;  // 前後の傾き → 垂直方向
+                const x = (gamma / 90) * 30; // 左右の傾き → 水平方向
+                const y = (beta / 90) * 30;  // 前後の傾き → 垂直方向
+                
                 this.ball.x = x;
                 this.ball.y = y;
 
-                const distance = Math.sqrt(x ** 2 + y ** 2).toFixed(2); // ピクセル単位
+
+
+                const distance = Math.sqrt(x ** 2 + y ** 2); // ピクセル単位
                 const angle = Math.atan2(y, x) * (180 / Math.PI); // 角度（度単位）
+                
+                this.tf7.text = `distance: ${Utils.roundTo(distance, 1)} / angle: ${Utils.roundTo(angle, 1)}`;
+
+                const oppositeAngle = (angle + 180) % 360;
+                this.scene.cameraFrom = oppositeAngle;
+                this.scene.cameraTilt = distance;
+                this.scene.lightFrom = this.sensorData.gyro.alpha + 90;
+                this.scene.lightStrength = distance;
+
                 this.pseudo.redraw(
-                    this.renderData.cameraFOV, this.renderData.cameraAngle,
-                    distance/10, angle,
+                    this.scene, this.tickCount
+                    // this.renderData.cameraFOV, this.renderData.cameraAngle,
+                    // distance/10, angle,
                 );
             }
 
@@ -186,8 +229,8 @@ export class GyroApplicationRoot extends PIXI.Container {
         if (event.alpha === undefined) return false;
         this.sensorData.gyro = {
             alpha: event.alpha,
-            beta : event.beta,
-            gamma: event.gamma,
+            beta : event.beta > 30 ? 30 : event.beta,
+            gamma: event.gamma > 30 ? 30 : event.gamma,
         };
         
     }

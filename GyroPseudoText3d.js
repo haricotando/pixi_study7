@@ -36,6 +36,7 @@ export class GyroPseudoText3d extends PIXI.Container {
         * サイドフェイスを作成
        */
         this.sideFace = this.addChild(new PIXI.Container());
+        // const sideStyle = Utils.cloneTextStyle(textStyle, {fill: 0xFF0000});
         const sideStyle = Utils.cloneTextStyle(textStyle, {fill: 0xCBCBCB});
         const numOfSideLayer = 10;
         this._sideFaceList = [];
@@ -81,30 +82,37 @@ export class GyroPseudoText3d extends PIXI.Container {
         const glowStyle = Utils.cloneTextStyle(textStyle, {fill: 0xFFFFFF});
         this.glowText = this.addChild(new PIXI.Text(text, glowStyle));
         this.glowFilter = new PIXI.filters.DropShadowFilter({
-            color  : 0xFF0000,
             color  : 0xFFFFFF,
-            alpha  : 0.9,
-            blur   : 4,
+            alpha  : 0.5,
+            blur   : 8,
             quality: 4,
             offset : {x:0, y:0},
             quality: 4,
             shadowOnly: true,
         });
-        this.glowText.filters = [this.glowFilter];
+        // this.glowText.filters = [this.glowFilter];
 
         this.sideFace.zIndex = 10;
-        this.frontFace.zIndex = 20;
+        this.frontFace.zIndex = 22;
         this.glowText.zIndex = 21;
         
         Utils.pivotCenter(this);
-        this.redraw();
     }
     
-    redraw(cameraRadius = 15, cameraAngle = 90, shadowRadius = 50, shadowDegree = 90){
+    
+    redraw(scene){
         /**
          * サイドフェイス
-         */
+        */
+        // const cameraRadius = 20;
+        // const cameraAngle = 90;
+
+        
+        const cameraRadius = 20;
+        const cameraAngle = 90;
+        
         const cameraRadiusPerTick = cameraRadius / this._sideFaceList.length;
+
         for (let i = 0; i < this._sideFaceList.length; i++) {
             
             const pos = {
@@ -126,27 +134,30 @@ export class GyroPseudoText3d extends PIXI.Container {
 
         /**
          * シャドウ
-         */
+        */
+       let shadowRadius = scene.lightStrength / 10;
+       shadowRadius = shadowRadius > 100 ? 100 : shadowRadius;
+       const shadowDegree = scene.lightFrom;
         const shadpwRadiusPerTick = shadowRadius / this._shadowList.length;
         for (let i = 0; i < this._shadowList.length; i++) {
             
-            const pos = {
-                x: (shadpwRadiusPerTick * i) * Math.cos(Utils.degreesToRadians(shadowDegree)),
-                y: (shadpwRadiusPerTick * i) * Math.sin(Utils.degreesToRadians(shadowDegree)),
-            }
-            
-            let shadow = this._shadowList[i];
-            shadow.scale.set(1);
-            shadow.x = pos.x;
-            shadow.y = pos.y;
-            const fov = i * 1.5;
-            shadow.width -= fov;
-            shadow.x += (fov) / 2;
+        const pos = {
+            x: (shadpwRadiusPerTick * i) * Math.cos(Utils.degreesToRadians(shadowDegree)),
+            y: (shadpwRadiusPerTick * i) * Math.sin(Utils.degreesToRadians(shadowDegree)),
         }
+        
+        let shadow = this._shadowList[i];
+        shadow.scale.set(1);
+        shadow.x = pos.x;
+        shadow.y = pos.y;
+        const fov = i * 1.5;
+        shadow.width -= fov;
+        shadow.x += (fov) / 2;
+    }
 
         /**
          * ドロップシャドウ
-         */
+        */
         const pos = {
             x: (shadowRadius/10) * Math.cos(Utils.degreesToRadians(shadowDegree)),
             y: (shadowRadius/10) * Math.sin(Utils.degreesToRadians(shadowDegree)),
@@ -155,7 +166,7 @@ export class GyroPseudoText3d extends PIXI.Container {
 
         /**
          * グロードロップシャドウ
-         */
+        */
         const glowPos = {
             x: (shadowRadius/5) * Math.cos(Utils.degreesToRadians(Utils.getOppositeDegrees(shadowDegree))),
             y: (shadowRadius/5) * Math.sin(Utils.degreesToRadians(Utils.getOppositeDegrees(shadowDegree))),

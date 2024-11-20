@@ -63,9 +63,9 @@ function init(){
     };
 
     document.body.appendChild(app.view);
-    // let appRoot = app.stage.addChild(new GyroApplicationRoot());
+    let appRoot = app.stage.addChild(new GyroApplicationRoot());
     // let appRoot = app.stage.addChild(new PseudoApplicationRoot(true));
-    const appRoot = app.stage.addChild(new ApplicationRoot());
+    // const appRoot = app.stage.addChild(new ApplicationRoot());
 /* ------------------------------------------------------------
     resize Event
 ------------------------------------------------------------ */
