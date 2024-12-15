@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>傾きに応じたボールの動き</title>
+  <title>端末の傾きに合わせてボールを動かす</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      margin-top: 5%;
+      margin: 20px;
     }
     .circle-container {
       position: relative;
@@ -28,7 +28,6 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      transition: transform 0.1s linear;
     }
     .output {
       font-size: 1em;
@@ -37,7 +36,7 @@
   </style>
 </head>
 <body>
-  <h1>端末の傾きに応じたボールの動き</h1>
+  <h1>端末の傾きに合わせてボールを動かす</h1>
   <div class="circle-container">
     <div class="dot"></div>
   </div>
@@ -47,31 +46,30 @@
     if (window.DeviceOrientationEvent) {
       const dotElement = document.querySelector('.dot');
       const outputElement = document.querySelector('.output');
-      const maxRadius = 1030; // ボールが動ける最大半径 (円の半径 - ボールの半径)
-
-      let currentX = 0;
-      let currentY = 0;
-      const smoothing = 0.2; // 慣性の強さ (値が小さいほどスムーズ)
+      const maxRadius = 235; // ボールが動ける最大半径 (円の半径 - ボールの半径)
 
       window.addEventListener('deviceorientation', (event) => {
-        const { beta, gamma } = event;
+        let { beta, gamma } = event;
 
-        // 傾きに基づいて目標位置を計算
-        const targetX = (gamma / 90) * maxRadius; // -90°〜90° → -maxRadius〜maxRadius
-        const targetY = (beta / 90) * maxRadius;  // -90°〜90° → -maxRadius〜maxRadius
+        // beta: 前後の傾き (-90 ~ 90)
+        // gamma: 左右の傾き (-90 ~ 90)
+        beta = Math.max(-90, Math.min(90, beta));
+        gamma = Math.max(-90, Math.min(90, gamma));
 
-        // 慣性を加えてボールを移動
-        currentX += (targetX - currentX) * smoothing;
-        currentY += (targetY - currentY) * smoothing;
+        // 傾きに基づいてボールの位置を計算
+        const x = (gamma / 90) * maxRadius; // 左右の傾き → 水平方向
+        const y = (beta / 90) * maxRadius;  // 前後の傾き → 垂直方向
 
-        // 点の位置を更新
-        dotElement.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        // ボールの位置を更新
+        dotElement.style.transform = `translate(${x}px, ${y}px)`;
 
-        // デバッグ情報を表示
+        // 中心からの距離を計算
+        const distance = Math.sqrt(x ** 2 + y ** 2).toFixed(2); // ピクセル単位
+        const angle = Math.atan2(y, x) * (180 / Math.PI); // 角度（度単位）
+
+        // 情報を表示
         outputElement.textContent = `
-          beta (前後): ${beta.toFixed(2)}°, 
-          gamma (左右): ${gamma.toFixed(2)}°,
-          dotX: ${currentX.toFixed(2)}, dotY: ${currentY.toFixed(2)}
+          ボールの位置: 中心からの距離 = ${distance}px, 角度 = ${angle.toFixed(2)}°
         `;
       });
     } else {

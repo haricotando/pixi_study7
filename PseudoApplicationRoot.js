@@ -26,7 +26,7 @@ export class PseudoApplicationRoot extends PIXI.Container {
         this.sortableChildren = true;
 
 
-        this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xEFEFEF}))
+        this.background = this.addChild(GraphicsHelper.exDrawRect(0, 0, dp.limitedScreen.width, dp.limitedScreen.height, false, {color:0xE2DDDA}))
         Utils.pivotCenter(this.background);
         this.requestDeviceOrientationPermission();
         this.initPseudoText();
